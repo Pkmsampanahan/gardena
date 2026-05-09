@@ -1554,32 +1554,46 @@
     function handleAttendanceTrigger() {
         triggerHaptic("confirm");
 
+        // 1. Cek duplikasi harian (DL/Absen Biasa)
         const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
         const hasDLToday = state.data.logs.some(l => l.name === state.user && l.date === todayStr && l.type === "DL");
         if (hasDLToday) {
-            showAlert("Opps", "Anda sudah tercatat DINAS LUAR hari ini.");
+            showAlert("Ditolak", "Anda sudah tercatat DINAS LUAR hari ini.");
             return;
         }
 
+        // 2. Cek Jadwal Shift
         const timeCheck = checkShiftTime();
         if (!timeCheck.allow) {
             showAlert("Ditolak", timeCheck.msg);
             return;
         }
 
+        // 3. VALIDASI LOKASI (FIX BUG GPS)
         const profText = document.getElementById('profile-gps-text');
         const bypassGPS = state.data.config.BYPASS_GPS === true || state.data.config.BYPASS_GPS === "true";
         
-        if (!bypassGPS && profText && profText.innerText.includes("Luar Area")) {
-            showAlert("Ditolak", "Anda berada di luar area PKM!");
-            return;
-        }
+        // Peringatan otomatis jika di luar area saat scan dipicu
+        if (!bypassGPS) {
+            if (!state.currentLocation || (profText && profText.innerText.includes("Mendeteksi"))) {
+                showAlert("Opps", "Menunggu akurasi GPS. Silakan tunggu sebentar.");
+                return;
+            }
 
-        if (!bypassGPS && (!state.currentLocation || (profText && profText.innerText.includes("OFFLINE")))) {
-             showAlert("GPS Error", "Lokasi belum terdeteksi/GPS Nonaktif.");
-             return;
+            const currentDist = calculateDistance(
+                state.currentLocation.coords.latitude, 
+                state.currentLocation.coords.longitude, 
+                TARGET_LOC.lat, 
+                TARGET_LOC.lng
+            );
+
+            if (currentDist > TARGET_LOC.radius) {
+                showAlert("Ditolak", `Absen Gagal! Anda berada di luar area (${currentDist}m).`);
+                return;
+            }
         }
         
+        // Jika lolos semua validasi, lanjut scan wajah
         startFaceAuth('ABSENSI');
     }
 
@@ -1932,7 +1946,11 @@
 
         const now = new Date();
         const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
+        
+        // Filter log hanya untuk user saat ini
         const myLogs = state.data.logs.filter(l => l.name === state.user);
+        
+        // Urutkan tanggal unik terbaru di atas
         const uniqueDates = [...new Set(myLogs.map(l => l.date))].sort((a, b) => {
             const da = a.split('/'); const db = b.split('/');
             return new Date(db[2], db[1]-1, db[0]) - new Date(da[2], da[1]-1, da[0]);
@@ -1940,7 +1958,17 @@
 
         const lastDate = uniqueDates[0]; 
         const isTodayActive = (lastDate === todayStr);
-        const displayLogs = myLogs.filter(l => l.date === lastDate);
+        
+        // Ambil log untuk tanggal terbaru
+        const rawDisplayLogs = myLogs.filter(l => l.date === lastDate);
+
+        // VALIDASI: Hanya tampilkan satu per jenis aktivitas (MASUK, PULANG, DL)
+        const uniqueLogsMap = new Map();
+        rawDisplayLogs.forEach(l => {
+            // Gunakan Map agar entri terakhir dengan tipe yang sama menimpa entri lama
+            uniqueLogsMap.set(l.type, l);
+        });
+        const displayLogs = Array.from(uniqueLogsMap.values());
 
         if(homeKetMasuk) homeKetMasuk.innerText = "--:--";
         if(homeKetPulang) homeKetPulang.innerText = "--:--";
