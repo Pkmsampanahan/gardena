@@ -375,15 +375,15 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .widget-capsule {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 4px 8px;
-            border-radius: 14px;
+            padding: 6px 12px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
@@ -546,8 +546,8 @@
         </div>
 
         <div id="view-profile" class="view-content">
-            <div class="pink-header p-6 pb-10 text-white shadow-2xl">
-                <div class="flex justify-between items-center mb-5">
+            <div class="pink-header p-6 pb-8 text-white shadow-2xl">
+                <div class="flex justify-between items-start mb-6">
                     <div class="flex items-center gap-4 text-left">
                         <div class="relative">
                             <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-[20px] border-2 border-white/40 flex items-center justify-center text-3xl shadow-inner overflow-hidden">
@@ -575,12 +575,21 @@
                 <div class="flex flex-col items-center gap-4">
                     <div class="widget-capsule">
                         <div class="flex items-center gap-2 border-r border-white/20 pr-3">
-                            <button onclick="refreshData(this)" class="text-white text-sm active:rotate-180 transition-transform">🔄</button>
+                            <button id="header-sync-btn" onclick="refreshData(this)" class="text-white hover:text-pink-200 transition-all active:scale-90">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                    <path d="M3 3v5h5"/>
+                                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                                    <path d="M16 16h5v5"/>
+                                </svg>
+                            </button>
                             <span class="text-[8px] font-black uppercase tracking-tighter opacity-80">Sync</span>
                         </div>
                         <div class="flex items-center gap-2 px-1">
-                            <span class="text-xs">🕒</span>
-                            <p id="clock-display" class="text-base font-black tracking-tight">00:00</p>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-white opacity-80" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <p id="clock-display" class="text-lg font-black tracking-tight leading-none">00:00</p>
                         </div>
                     </div>
 
@@ -616,7 +625,7 @@
                     <div id="daily-log-container" class="space-y-3"></div>
                 </div>
 
-                <div class="shift-detail-card">
+                <div class="shift-detail-card" id="shift-detail-content">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
                             <span class="text-lg">📅</span>
@@ -625,7 +634,7 @@
                         <span class="text-[7px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-lg uppercase">Shift Data</span>
                     </div>
                     
-                    <div class="space-y-1">
+                    <div id="shift-items-container" class="space-y-1">
                         <div class="shift-item">
                             <span class="shift-label">Buka Absen Masuk</span>
                             <span id="shift-in-start" class="shift-value">--:--</span>
@@ -639,7 +648,7 @@
                             <span id="shift-out-range" class="shift-value">--:-- s/d --:--</span>
                         </div>
                     </div>
-                    <p class="text-[7px] text-slate-400 font-bold uppercase mt-4 italic">* Pastikan Anda berada dalam radius PKM sebelum menekan tombol scan.</p>
+                    <p id="shift-footer-note" class="text-[7px] text-slate-400 font-bold uppercase mt-4 italic">* Pastikan Anda berada dalam radius PKM sebelum menekan tombol scan.</p>
                 </div>
 
                 <div class="app-footer" style="border:none; padding-bottom: 40px; background:transparent;">
@@ -656,8 +665,8 @@
             <div class="p-8" style="padding-top: calc(2rem + var(--sat));">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Rekap Presensi</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">Riwayat Absen Seluruh Petugas</p>
+                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Rekap Mandiri</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">Riwayat Absensi Saya</p>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="refreshData(this)" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shadow-sm border border-slate-200">🔄</button>
@@ -701,9 +710,8 @@
                         </select>
                     </div>
                     <div class="relative">
-                        <input type="text" id="search-nama" oninput="renderRekap()" placeholder="Cari Nama Petugas..." class="w-full bg-slate-50 border border-slate-200 p-3 pl-10 rounded-xl text-[11px] font-bold outline-none focus:border-pink-400">
-                        <span class="absolute left-3 top-3">🔍</span>
-                        <button onclick="clearAllFilters()" class="absolute right-3 top-3 text-[10px] font-bold text-red-400 uppercase">Reset</button>
+                        <input type="text" id="search-nama" oninput="renderRekap()" placeholder="Cari Nama Petugas..." class="w-full bg-slate-50 border border-slate-200 p-3 pl-10 rounded-xl text-[11px] font-bold outline-none focus:border-pink-400 hidden">
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-[11px] font-bold text-slate-400 uppercase text-center">Data Terfilter: <span id="rekap-owner-name" class="text-pink-600">User</span></div>
                     </div>
                 </div>
 
@@ -773,6 +781,29 @@
     </nav>
 </div>
 
+<div id="modal-radius-error" class="modal-overlay">
+    <div class="modal-card">
+        <div class="bg-red-500 p-6 text-white text-center">
+            <h3 class="font-black uppercase text-sm">Akses Lokasi Ditolak</h3>
+        </div>
+        <div class="p-8 text-center">
+            <div class="w-full flex justify-center mb-4">
+                <dotlottie-player src="https://lottie.host/86d6335a-4958-450f-90e6-59750b3f86e3/W6Uj4M9kK9.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></dotlottie-player>
+            </div>
+            <h4 class="text-slate-800 font-extrabold text-sm uppercase">Anda Diluar Jangkauan</h4>
+            <p id="radius-error-msg" class="text-[10px] text-slate-400 font-bold mt-2 uppercase leading-relaxed">Silakan mendekat ke area Puskesmas Sampanahan untuk melakukan absensi.</p>
+            
+            <div id="radius-distance-box" class="mt-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                <p class="text-[8px] font-black text-slate-400 uppercase mb-1">Jarak Saat Ini</p>
+                <p id="radius-distance-val" class="text-xl font-black text-red-500">Mendeteksi...</p>
+                <p class="text-[7px] font-bold text-slate-400 mt-1">* Maksimal Radius: <span id="radius-limit-val">100</span>m</p>
+            </div>
+
+            <button onclick="closeRadiusModal()" class="btn-primary mt-8 text-[10px]">SAYA MENGERTI</button>
+        </div>
+    </div>
+</div>
+
 <div id="modal-shift-info" class="modal-overlay">
     <div class="modal-card">
         <div class="pink-header p-6 text-white text-center">
@@ -784,23 +815,8 @@
                 <p id="modal-shift-day-text" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Jadwal...</p>
             </div>
             
-            <div class="space-y-4">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Sesi Masuk</p>
-                    <div class="flex justify-between items-end">
-                        <span id="modal-shift-in-start" class="text-lg font-black text-slate-800">--:--</span>
-                        <span class="text-[9px] font-bold text-slate-400 italic">Hingga <span id="modal-shift-in-late" class="text-pink-600">--:--</span></span>
-                    </div>
+            <div id="modal-shift-details-container" class="space-y-4">
                 </div>
-
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Sesi Pulang</p>
-                    <div class="flex justify-between items-end">
-                        <span id="modal-shift-out-range" class="text-lg font-black text-slate-800">--:--</span>
-                        <span class="text-[9px] font-bold text-slate-400 italic">Waktu Pulang</span>
-                    </div>
-                </div>
-            </div>
 
             <button onclick="closeShiftModal()" class="btn-primary text-xs uppercase w-full">Tutup Info</button>
         </div>
@@ -914,8 +930,8 @@
     const APP_VERSION = "1.2.1"; 
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDeWZyUvXj3qVOZXviPgN-d42jswXgkm2cvYlA7OBgGSPX-G_rxYti_rJWGVdpmi_f2A/exec";
     
-    let TARGET_LOC = { lat: -2.637013, lng: 116.203609, radius: 100 }; 
-    const ADMIN_PASSWORD = "12345"; 
+    let TARGET_LOC = { lat: -2.637013, lng: 116.203609, radius: 100 };
+    const ADMIN_PASSWORD = "12345";
 
     let state = { 
         user: localStorage.getItem('gardena_user') || null, 
@@ -1120,7 +1136,7 @@
             if(btn) setTimeout(() => btn.classList.remove('spinning'), 500);
             if(state.currentView === 'profile') {
                 renderDailyLog();
-                renderShiftInfo(); // Update shift info UI
+                renderShiftInfo(); 
             }
         }
     }
@@ -1225,30 +1241,62 @@
 
     function renderShiftInfo() {
         const titleEl = document.getElementById('shift-day-title');
-        const inStartEl = document.getElementById('shift-in-start');
-        const inLateEl = document.getElementById('shift-in-late');
-        const outRangeEl = document.getElementById('shift-out-range');
-
+        const container = document.getElementById('shift-items-container');
+        const footerNote = document.getElementById('shift-footer-note');
         const badge = document.getElementById('session-indicator-badge');
         const badgeText = document.getElementById('session-badge-text');
 
+        const now = new Date();
+        const day = now.getDay(); 
+        const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        
+        if(titleEl) titleEl.innerText = `Jadwal Hari ${dayNames[day]}`;
+
+        if (day === 0 || day === 6) {
+            if(container) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-4 bg-red-50 rounded-2xl border border-red-100">
+                        <span class="text-2xl mb-1">🏠</span>
+                        <p class="text-[10px] font-black text-red-600 uppercase tracking-widest">Jadwal Kerja Tutup</p>
+                        <p class="text-[8px] font-bold text-red-400 uppercase mt-1">Sabtu & Minggu Libur</p>
+                    </div>
+                `;
+            }
+            if(footerNote) footerNote.style.display = 'none';
+            if(badge && badgeText) {
+                badge.classList.remove('active', 'waiting');
+                badge.classList.add('closed');
+                badgeText.innerText = "Sistem Libur";
+            }
+            return;
+        }
+
+        if(footerNote) footerNote.style.display = 'block';
         const cfg = state.data.config || {};
         if (!cfg.SHIFT_DATA) return;
 
         try {
             const shift = typeof cfg.SHIFT_DATA === 'string' ? JSON.parse(cfg.SHIFT_DATA) : cfg.SHIFT_DATA;
-            const now = new Date();
-            const day = now.getDay();
             const isFriday = (day === 5);
             const data = isFriday ? shift.fri : shift.reg;
-            const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-            if(titleEl) titleEl.innerText = `Jadwal Hari ${dayNames[day]}`;
-            if(inStartEl) inStartEl.innerText = data.inStart;
-            if(inLateEl) inLateEl.innerText = data.inLate;
-            if(outRangeEl) outRangeEl.innerText = `${data.outStart} s/d ${data.outEnd}`;
+            if(container) {
+                container.innerHTML = `
+                    <div class="shift-item">
+                        <span class="shift-label">Buka Absen Masuk</span>
+                        <span class="shift-value">${data.inStart}</span>
+                    </div>
+                    <div class="shift-item">
+                        <span class="shift-label">Batas Terlambat</span>
+                        <span class="shift-value highlight">${data.inLate}</span>
+                    </div>
+                    <div class="shift-item">
+                        <span class="shift-label">Sesi Absen Pulang</span>
+                        <span class="shift-value">${data.outStart} s/d ${data.outEnd}</span>
+                    </div>
+                `;
+            }
 
-            // Update Badge Logic
             const currentTime = now.getHours() * 60 + now.getMinutes();
             const parse = (t) => {
                 const [h, m] = t.split(':').map(Number);
@@ -1262,7 +1310,6 @@
 
             if (badge && badgeText) {
                 badge.classList.remove('active', 'waiting', 'closed');
-                
                 if (currentTime >= inS && currentTime <= inL) {
                     badge.classList.add('active');
                     badgeText.innerText = "Sesi Masuk Terbuka";
@@ -1280,28 +1327,58 @@
                     badgeText.innerText = "Sesi Absensi Tutup";
                 }
             }
-
         } catch(e) { console.log("Shift parse error", e); }
     }
 
     function openShiftModal() {
         triggerHaptic("confirm");
+        const now = new Date();
+        const day = now.getDay();
+        const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const modalTitle = document.getElementById('modal-shift-day-text');
+        const modalContainer = document.getElementById('modal-shift-details-container');
+
+        if(modalTitle) modalTitle.innerText = `Jadwal Operasional ${dayNames[day]}`;
+
+        if (day === 0 || day === 6) {
+            if(modalContainer) {
+                modalContainer.innerHTML = `
+                    <div class="bg-red-50 p-6 rounded-2xl border border-red-100 text-center">
+                        <p class="text-sm font-black text-red-600 uppercase mb-1">Hari Libur</p>
+                        <p class="text-[9px] font-bold text-red-400 uppercase leading-relaxed">Pelayanan administratif dan absensi rutin tutup pada hari Sabtu & Minggu.</p>
+                    </div>
+                `;
+            }
+            document.getElementById('modal-shift-info').style.display = 'flex';
+            return;
+        }
+
         const cfg = state.data.config || {};
         if (!cfg.SHIFT_DATA) return showAlert("Opps", "Data jadwal belum tersedia.");
 
         try {
             const shift = typeof cfg.SHIFT_DATA === 'string' ? JSON.parse(cfg.SHIFT_DATA) : cfg.SHIFT_DATA;
-            const now = new Date();
-            const day = now.getDay();
             const isFriday = (day === 5);
             const data = isFriday ? shift.fri : shift.reg;
-            const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-            document.getElementById('modal-shift-day-text').innerText = `Jadwal Operasional ${dayNames[day]}`;
-            document.getElementById('modal-shift-in-start').innerText = data.inStart;
-            document.getElementById('modal-shift-in-late').innerText = data.inLate;
-            document.getElementById('modal-shift-out-range').innerText = `${data.outStart} - ${data.outEnd}`;
-            
+            if(modalContainer) {
+                modalContainer.innerHTML = `
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Sesi Masuk</p>
+                        <div class="flex justify-between items-end">
+                            <span class="text-lg font-black text-slate-800">${data.inStart}</span>
+                            <span class="text-[9px] font-bold text-slate-400 italic">Hingga <span class="text-pink-600">${data.inLate}</span></span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Sesi Pulang</p>
+                        <div class="flex justify-between items-end">
+                            <span class="text-lg font-black text-slate-800">${data.outStart} - ${data.outEnd}</span>
+                            <span class="text-[9px] font-bold text-slate-400 italic">Waktu Pulang</span>
+                        </div>
+                    </div>
+                `;
+            }
             document.getElementById('modal-shift-info').style.display = 'flex';
         } catch(e) { showAlert("Error", "Gagal membaca jadwal."); }
     }
@@ -1348,13 +1425,15 @@
 
     function renderRekap() {
         const tbody = document.getElementById('rekap-table-body');
+        const ownerNameEl = document.getElementById('rekap-owner-name');
         if(!tbody) return;
 
         const filterBulan = document.getElementById('filter-bulan').value; 
         const filterTahun = document.getElementById('filter-tahun').value;
         const filterTanggal = document.getElementById('filter-tanggal').value; 
         const filterStatus = document.getElementById('filter-status').value;
-        const searchQuery = document.getElementById('search-nama').value.toLowerCase();
+        
+        if (ownerNameEl) ownerNameEl.innerText = state.user || "User";
 
         const grouped = {};
         let formattedDateFilter = "";
@@ -1368,14 +1447,14 @@
         }
 
         state.data.logs.forEach(l => {
+            if (l.name !== state.user) return;
+
             const dateParts = l.date.split('/'); 
             if (dateParts.length < 3) return;
 
             const logDay = dateParts[0].padStart(2, '0'); 
             const logMonth = dateParts[1].padStart(2, '0'); 
             const logYear = dateParts[2];
-
-            if (searchQuery && !l.name.toLowerCase().includes(searchQuery)) return;
 
             if (formattedDateFilter) { 
                 if (l.date !== formattedDateFilter) return; 
@@ -1415,8 +1494,7 @@
         const resultArr = Object.values(grouped).sort((a, b) => b.timestamp - a.timestamp);
         
         tbody.innerHTML = resultArr.length > 0 ? resultArr.map(r => {
-            const isMe = r.name === state.user;
-            return `<tr class="${isMe ? 'my-row' : ''}"><td>${r.name}</td><td>${r.date}</td><td>${r.masuk} - ${r.pulang}</td><td>${r.ket}</td></tr>`;
+            return `<tr class="my-row"><td>${r.name}</td><td>${r.date}</td><td>${r.masuk} - ${r.pulang}</td><td>${r.ket}</td></tr>`;
         }).join('') : '<tr><td colspan="4" class="text-center py-10 text-slate-400 font-bold uppercase">Data tidak ditemukan</td></tr>';
     }
 
@@ -1501,9 +1579,7 @@
         else targetScale = 1.2; 
 
         if (!isCentered) return { aligned: false, status: "WAJAH DI TENGAH", scale: targetScale };
-
         if (width < videoWidth * 0.2) return { aligned: false, status: "TERLALU JAUH", scale: targetScale };
-
         if (width > videoWidth * 0.7) return { aligned: false, status: "TERLALU DEKAT", scale: targetScale };
 
         return { aligned: true, status: "POSISI SEMPURNA ✅", scale: targetScale };
@@ -1512,8 +1588,12 @@
     function checkShiftTime() {
         const now = new Date();
         const day = now.getDay(); 
+
+        if (day === 0 || day === 6) {
+            return { allow: false, msg: "Hari ini libur (Sabtu/Minggu). Sistem absensi rutin ditutup." };
+        }
+
         const currentTime = now.getHours() * 60 + now.getMinutes(); 
-        
         const cfg = state.data.config || {};
         if (!cfg.SHIFT_DATA) return { allow: true }; 
 
@@ -1553,8 +1633,6 @@
 
     function handleAttendanceTrigger() {
         triggerHaptic("confirm");
-
-        // 1. Cek duplikasi harian (DL/Absen Biasa)
         const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
         const hasDLToday = state.data.logs.some(l => l.name === state.user && l.date === todayStr && l.type === "DL");
         if (hasDLToday) {
@@ -1562,54 +1640,47 @@
             return;
         }
 
-        // 2. Cek Jadwal Shift
         const timeCheck = checkShiftTime();
         if (!timeCheck.allow) {
             showAlert("Ditolak", timeCheck.msg);
             return;
         }
 
-        // 3. VALIDASI LOKASI (FIX BUG GPS)
-        const profText = document.getElementById('profile-gps-text');
         const bypassGPS = state.data.config.BYPASS_GPS === true || state.data.config.BYPASS_GPS === "true";
-        
-        // Peringatan otomatis jika di luar area saat scan dipicu
         if (!bypassGPS) {
-            if (!state.currentLocation || (profText && profText.innerText.includes("Mendeteksi"))) {
-                showAlert("Opps", "Menunggu akurasi GPS. Silakan tunggu sebentar.");
+            if (!state.currentLocation) {
+                showAlert("Opps", "Mendeteksi koordinat GPS...");
                 return;
             }
-
-            const currentDist = calculateDistance(
-                state.currentLocation.coords.latitude, 
-                state.currentLocation.coords.longitude, 
-                TARGET_LOC.lat, 
-                TARGET_LOC.lng
-            );
-
+            const currentDist = calculateDistance(state.currentLocation.coords.latitude, state.currentLocation.coords.longitude, TARGET_LOC.lat, TARGET_LOC.lng);
             if (currentDist > TARGET_LOC.radius) {
-                showAlert("Ditolak", `Absen Gagal! Anda berada di luar area (${currentDist}m).`);
+                showRadiusModal(currentDist);
                 return;
             }
         }
-        
-        // Jika lolos semua validasi, lanjut scan wajah
         startFaceAuth('ABSENSI');
+    }
+
+    function showRadiusModal(dist) {
+        soundError();
+        triggerHaptic("error");
+        document.getElementById('radius-distance-val').innerText = `${dist} Meter`;
+        document.getElementById('radius-limit-val').innerText = TARGET_LOC.radius;
+        document.getElementById('modal-radius-error').style.display = 'flex';
+    }
+    function closeRadiusModal() {
+        document.getElementById('modal-radius-error').style.display = 'none';
     }
 
     async function startFaceAuth(mode) {
         state.authMode = mode;
         triggerHaptic("confirm");
-        
         const val = document.getElementById('select-user').value;
         if (mode === 'LOGIN' && val === 'NEW_REGISTER') return openRegister();
         if (mode === 'LOGIN' && val === 'ADMIN') return openAdminLogin();
-        
         if(!state.modelsLoaded) { showLoading(true, "Menyiapkan AI..."); await loadModels(); showLoading(false); }
-        
         const modalTitle = document.getElementById('face-modal-title');
         if(modalTitle) modalTitle.innerText = mode === 'LOGIN' ? "Verifikasi Masuk" : "Verifikasi Absensi";
-        
         document.getElementById('modal-face').style.display = 'flex';
         const success = await getCameraStream('video-preview');
         if (!success) return closeFaceModal();
@@ -1623,14 +1694,10 @@
         const statusEl = document.getElementById('face-status-text');
         const oval = document.getElementById('login-oval');
         if (!state.stream || !video || video.paused || document.getElementById('modal-face').style.display === 'none') return;
-        
         const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.5 }))
                                     .withFaceLandmarks().withFaceDescriptor();
-        
         const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
-        
         video.style.transform = `scaleX(-1) scale(${alignment.scale})`;
-        
         if (alignment.aligned) {
             state.currentDescriptor = detection.descriptor;
             if(oval) oval.classList.add('valid');
@@ -1638,10 +1705,7 @@
                 statusEl.innerText = alignment.status;
                 statusEl.className = "text-[8px] text-center mt-4 font-bold text-emerald-500 uppercase";
             }
-            if(btn) { 
-                btn.disabled = false; 
-                btn.innerText = state.authMode === 'LOGIN' ? "KENALI SAYA & MASUK" : "KONFIRMASI ABSENSI"; 
-            }
+            if(btn) { btn.disabled = false; btn.innerText = state.authMode === 'LOGIN' ? "KENALI SAYA & MASUK" : "KONFIRMASI ABSENSI"; }
         } else {
             if(oval) { oval.classList.remove('valid'); if (detection) oval.classList.add('invalid'); }
             if(statusEl) {
@@ -1657,13 +1721,10 @@
         triggerHaptic("confirm");
         const btn = document.getElementById('btn-face-action');
         if(btn) btn.disabled = true;
-        
         let selectedUser = document.getElementById('select-user').value;
         const threshold = parseFloat(state.data.config.THRESHOLD) || 0.1;
-
         try {
             let matchedUser = null;
-
             if (state.authMode === 'ABSENSI') {
                 const officerData = state.data.descriptors.find(d => d.name === state.user);
                 if (officerData) {
@@ -1685,36 +1746,24 @@
                     const savedDescriptor = new Float32Array(JSON.parse(officer.descriptor));
                     const faceMatcher = new faceapi.FaceMatcher(savedDescriptor, threshold);
                     const match = faceMatcher.findBestMatch(state.currentDescriptor);
-                    if (match.label !== 'unknown') {
-                        matchedUser = officer.name;
-                        break; 
-                    }
+                    if (match.label !== 'unknown') { matchedUser = officer.name; break; }
                 }
             }
-
             if (matchedUser) {
                 closeFaceModal(); 
-
                 if (state.authMode === 'LOGIN') {
                     state.user = matchedUser;
                     localStorage.setItem('gardena_user', matchedUser);
                     setTimeout(() => showView('profile'), 300);
-                    showAlert("Berhasil", "Selamat datang, " + matchedUser);
-                } else {
-                    processAttendance("FACE");
-                }
+                    showAlert("Berhasil", "Selamat datang, " + matchedUser + "");
+                } else { processAttendance("FACE"); }
             } else { 
                 soundError(); triggerHaptic("error");
                 showAlert("Akses Ditolak", "Wajah tidak dikenali!"); 
                 if(btn) { btn.disabled = false; btn.innerText = "COBA LAGI"; }
                 detectFaceLoop();
             }
-        } catch (e) { 
-            console.error(e);
-            soundError(); 
-            showAlert("Error", "Gagal memproses AI."); 
-            if(btn) btn.disabled = false; 
-        }
+        } catch (e) { soundError(); showAlert("Error", "Gagal memproses AI."); if(btn) btn.disabled = false; }
     }
 
     function openAdminLogin() {
@@ -1729,11 +1778,7 @@
     }
     function processAdminLogin() {
         const pin = document.getElementById('admin-pin').value;
-        if (pin === ADMIN_PASSWORD) {
-            window.location.href = 'dasbordadmin.html';
-        } else { 
-            showAlert("Ditolak", "PIN Salah!"); 
-        }
+        if (pin === ADMIN_PASSWORD) { window.location.href = 'dasbordadmin.html'; } else { showAlert("Ditolak", "PIN Salah!"); }
     }
 
     function openLogoutModal() { triggerHaptic("confirm"); document.getElementById('modal-logout').style.display = 'flex'; }
@@ -1748,34 +1793,21 @@
     }
 
     function closeFaceModal() {
-        if(state.stream) {
-            state.stream.getTracks().forEach(t => t.stop());
-            state.stream = null;
-        }
-        if(state.faceDetectionFrame) {
-            cancelAnimationFrame(state.faceDetectionFrame);
-            state.faceDetectionFrame = null;
-        }
+        if(state.stream) { state.stream.getTracks().forEach(t => t.stop()); state.stream = null; }
+        if(state.faceDetectionFrame) { cancelAnimationFrame(state.faceDetectionFrame); state.faceDetectionFrame = null; }
         document.getElementById('modal-face').style.display = 'none';
         document.getElementById('face-scanner-line').style.display = 'none';
         const video = document.getElementById('video-preview');
         if(video) video.style.transform = 'scaleX(-1)';
     }
 
-    function handleSelectChange(val) { 
-        triggerHaptic("confirm");
-        if (val === 'NEW_REGISTER') openRegister(); 
-        if (val === 'ADMIN') openAdminLogin(); 
-    }
+    function handleSelectChange(val) { triggerHaptic("confirm"); if (val === 'NEW_REGISTER') openRegister(); if (val === 'ADMIN') openAdminLogin(); }
 
     async function openRegister() {
         if(!state.modelsLoaded) { showLoading(true, "Menyiapkan AI..."); await loadModels(); showLoading(false); }
         document.getElementById('modal-register').style.display = 'flex';
         const success = await getCameraStream('video-register');
-        if (success) { 
-            document.getElementById('reg-scanner-line').style.display = 'block'; 
-            detectFaceLoopRegister(); 
-        }
+        if (success) { document.getElementById('reg-scanner-line').style.display = 'block'; detectFaceLoopRegister(); }
     }
 
     async function detectFaceLoopRegister() {
@@ -1787,23 +1819,15 @@
         const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.5 }))
                                     .withFaceLandmarks().withFaceDescriptor();
         const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
-        
         video.style.transform = `scaleX(-1) scale(${alignment.scale})`;
-
         if (alignment.aligned) {
             state.currentDescriptor = detection.descriptor;
             if(oval) oval.classList.add('valid');
-            if(statusEl) {
-                statusEl.innerText = alignment.status;
-                statusEl.className = "text-[8px] text-center font-bold text-emerald-500 uppercase";
-            }
+            if(statusEl) { statusEl.innerText = alignment.status; statusEl.className = "text-[8px] text-center font-bold text-emerald-500 uppercase"; }
             if(btn) btn.disabled = false;
         } else {
             if(oval) { oval.classList.remove('valid'); if (detection) oval.classList.add('invalid'); }
-            if(statusEl) {
-                statusEl.innerText = alignment.status;
-                statusEl.className = "text-[8px] text-center font-bold text-red-400 uppercase";
-            }
+            if(statusEl) { statusEl.innerText = alignment.status; statusEl.className = "text-[8px] text-center font-bold text-red-400 uppercase"; }
             if(btn) btn.disabled = true; 
             state.faceDetectionFrame = requestAnimationFrame(detectFaceLoopRegister);
         }
@@ -1814,8 +1838,7 @@
         if(state.faceDetectionFrame) cancelAnimationFrame(state.faceDetectionFrame);
         state.stream = null; document.getElementById('modal-register').style.display = 'none';
         document.getElementById('reg-scanner-line').style.display = 'none';
-        const sel = document.getElementById('select-user');
-        if(sel) sel.value = "";
+        const sel = document.getElementById('select-user'); if(sel) sel.value = "";
     }
 
     async function processRegister() {
@@ -1838,31 +1861,20 @@
         document.getElementById('modal-scan').style.display = 'flex';
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(updateGeoUI, (err) => { 
-                const gs = document.getElementById('geo-status-text');
-                if(gs) gs.innerText = "GPS TIDAK AKTIF ❌"; 
+                const gs = document.getElementById('geo-status-text'); if(gs) gs.innerText = "GPS TIDAK AKTIF ❌"; 
             }, { enableHighAccuracy: true });
         }
     }
 
-    function closeScanModal() {
-        document.getElementById('modal-scan').style.display = 'none'; 
-    }
+    function closeScanModal() { document.getElementById('modal-scan').style.display = 'none'; }
 
     function openDLModal() {
         triggerHaptic("confirm");
-
         const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
         const hasAttendanceToday = state.data.logs.some(l => l.name === state.user && l.date === todayStr && (l.type === "MASUK" || l.type === "PULANG"));
-        if (hasAttendanceToday) {
-            showAlert("Opps", "Anda sudah absen MASUK/PULANG. Fitur DL terkunci.");
-            return;
-        }
-
+        if (hasAttendanceToday) { showAlert("Opps", "Anda sudah absen MASUK/PULANG. Fitur DL terkunci."); return; }
         const timeCheck = checkShiftTime();
-        if (!timeCheck.allow) {
-            showAlert("Ditolak", timeCheck.msg);
-            return;
-        }
+        if (!timeCheck.allow) { showAlert("Ditolak", timeCheck.msg); return; }
         document.getElementById('modal-dl').style.display = 'flex';
     }
     
@@ -1880,39 +1892,23 @@
         const ketIn = document.getElementById('dl-keterangan');
         const ket = ketIn ? ketIn.value : "-";
         if(!ket || ket === "-") return showAlert("Opps", "Isi keterangan!");
-        
         const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
         const localDuplicate = state.data.logs.some(l => l.name === state.user && l.date === todayStr && l.type === "DL");
         if (localDuplicate) return showAlert("Ditolak", "Hari ini sudah DL!");
-        
         if(btn) btn.disabled = true;
-        navigator.geolocation.getCurrentPosition((pos) => { 
-            state.currentLocation = pos; closeDLModal(); processAttendance("DL", ket); 
-        }, () => { closeDLModal(); processAttendance("DL", ket); });
+        navigator.geolocation.getCurrentPosition((pos) => { state.currentLocation = pos; closeDLModal(); processAttendance("DL", ket); }, () => { closeDLModal(); processAttendance("DL", ket); });
     }
 
     async function processAttendance(method, note = "-") {
-        if (state.isProcessing) return; 
-        state.isProcessing = true; 
-
+        if (state.isProcessing) return; state.isProcessing = true; 
         const timeCheck = checkShiftTime();
-        if (!timeCheck.allow) {
-            state.isProcessing = false;
-            showAlert("Ditolak", timeCheck.msg);
-            return;
-        }
-
+        if (!timeCheck.allow) { state.isProcessing = false; showAlert("Ditolak", timeCheck.msg); return; }
         const now = new Date();
         const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace('.', '/').replace(/\./g, '/');
         const currentTimeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Makassar' }).replace('.', ':');
-        
         let type = (method === "DL") ? "DL" : timeCheck.type;
-
         const myLogsToday = state.data.logs.filter(l => l.name === state.user && l.date === todayStr);
-        if (myLogsToday.some(l => l.type === type)) { 
-            state.isProcessing = false; return showAlert("Ditolak", `Sudah absen ${type}!`); 
-        }
-        
+        if (myLogsToday.some(l => l.type === type)) { state.isProcessing = false; return showAlert("Ditolak", `Sudah absen ${type}!`); }
         showLoading(true, `Mencatat Absen ${type}...`);
         const payload = { 
             name: state.user, type: type, note: note,
@@ -1920,17 +1916,7 @@
             coord: state.currentLocation ? `${state.currentLocation.coords.latitude},${state.currentLocation.coords.longitude}` : "No-GPS",
             clientTime: currentTimeStr
         };
-        try { 
-            await callGAS('saveAttendance', [payload]); 
-            showAlert("Berhasil", `${type} Berhasil Dicatat ✨`);
-            await fetchData(); 
-        } catch (err) { 
-            soundError(); 
-            showAlert("Error", "Gagal menyimpan data.");
-        } finally { 
-            state.isProcessing = false; 
-            showLoading(false); 
-        }
+        try { await callGAS('saveAttendance', [payload]); showAlert("Berhasil", `${type} Berhasil Dicatat ✨`); await fetchData(); } catch (err) { soundError(); showAlert("Error", "Gagal menyimpan data."); } finally { state.isProcessing = false; showLoading(false); }
     }
 
     function renderDailyLog() {
@@ -1938,41 +1924,22 @@
         const homeKetMasuk = document.getElementById('home-ket-masuk');
         const homeKetPulang = document.getElementById('home-ket-pulang');
         if(!container) return;
-        
-        if (state.isRefreshing) { 
-            container.innerHTML = `<div class="skeleton skeleton-log"></div><div class="skeleton skeleton-log"></div>`; 
-            return; 
-        }
-
+        if (state.isRefreshing) { container.innerHTML = `<div class="skeleton skeleton-log"></div><div class="skeleton skeleton-log"></div>`; return; }
         const now = new Date();
         const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
-        
-        // Filter log hanya untuk user saat ini
         const myLogs = state.data.logs.filter(l => l.name === state.user);
-        
-        // Urutkan tanggal unik terbaru di atas
         const uniqueDates = [...new Set(myLogs.map(l => l.date))].sort((a, b) => {
             const da = a.split('/'); const db = b.split('/');
             return new Date(db[2], db[1]-1, db[0]) - new Date(da[2], da[1]-1, da[0]);
         });
-
         const lastDate = uniqueDates[0]; 
         const isTodayActive = (lastDate === todayStr);
-        
-        // Ambil log untuk tanggal terbaru
         const rawDisplayLogs = myLogs.filter(l => l.date === lastDate);
-
-        // VALIDASI: Hanya tampilkan satu per jenis aktivitas (MASUK, PULANG, DL)
         const uniqueLogsMap = new Map();
-        rawDisplayLogs.forEach(l => {
-            // Gunakan Map agar entri terakhir dengan tipe yang sama menimpa entri lama
-            uniqueLogsMap.set(l.type, l);
-        });
+        rawDisplayLogs.forEach(l => { uniqueLogsMap.set(l.type, l); });
         const displayLogs = Array.from(uniqueLogsMap.values());
-
         if(homeKetMasuk) homeKetMasuk.innerText = "--:--";
         if(homeKetPulang) homeKetPulang.innerText = "--:--";
-
         if (displayLogs.length > 0) {
             container.innerHTML = displayLogs.map(l => {
                 const fixedTime = formatTimeFix(l.time);
@@ -1981,7 +1948,6 @@
                     if (l.type === 'PULANG') { if(homeKetPulang) homeKetPulang.innerText = fixedTime; }
                     if (l.type === 'DL') { if(homeKetMasuk) homeKetMasuk.innerText = "DL"; if(homeKetPulang) homeKetPulang.innerText = "DL"; }
                 }
-
                 let biometricIcon = '';
                 if(l.type === 'MASUK') {
                     biometricIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="log-icon stroke-emerald-500" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-4.5s-3-2-3-4.5a3 3 0 0 0-6 0c0 2.5-1 3.9-3 4.5s-3 2.5-3 4.5a7 7 0 0 0 7 7Z"/><path d="M12 17v.01"/></svg>`;
@@ -1990,33 +1956,26 @@
                 } else {
                     biometricIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="log-icon stroke-indigo-500" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-4.5s-3-2-3-4.5a3 3 0 0 0-6 0c0 2.5-1 3.9-3 4.5s-3 2.5-3 4.5a7 7 0 0 0 7 7Z"/><polyline points="12 11 12 17 15 15"/></svg>`;
                 }
-
                 return `<div class="log-card">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center bg-white shadow-inner">
-                                    ${biometricIcon}
-                                </div>
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center bg-white shadow-inner">${biometricIcon}</div>
                                 <div>
                                     <p class="text-[10px] font-black text-slate-800 uppercase tracking-tighter">${l.type} ${l.type === 'DL' ? '('+l.note+')' : ''}</p>
                                     <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">${l.date} | ${fixedTime}</p>
                                 </div>
                             </div>
-                            <span class="text-[7px] font-black px-2 py-1 rounded-lg bg-white border border-slate-100 ${l.status && l.status.includes('TERLAMBAT') ? 'text-red-500' : 'text-emerald-500'} shadow-sm">
-                                ${l.status || 'OK'}
-                            </span>
+                            <span class="text-[7px] font-black px-2 py-1 rounded-lg bg-white border border-slate-100 ${l.status && l.status.includes('TERLAMBAT') ? 'text-red-500' : 'text-emerald-500'} shadow-sm">${l.status || 'OK'}</span>
                         </div>`;
             }).join('');
-        } else { 
-            container.innerHTML = '<div class="text-center py-6 text-[9px] font-bold text-slate-300 uppercase">Belum ada riwayat aktivitas</div>'; 
-        }
+        } else { container.innerHTML = '<div class="text-center py-6 text-[9px] font-bold text-slate-300 uppercase">Belum ada riwayat aktivitas</div>'; }
     }
 
     function clearAllFilters() { setFilterDefault(); renderRekap(); }
 
     function downloadExcel() { 
         const table = document.getElementById('table-to-download');
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Rekap Absensi" }); 
-        XLSX.writeFile(wb, `REKAP_GARDENA_${new Date().getTime()}.xlsx`); 
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Rekap Absensi Mandiri" }); 
+        XLSX.writeFile(wb, `REKAP_MANDIRI_${state.user}_${new Date().getTime()}.xlsx`); 
     }
 
     window.onload = async () => { 
@@ -2030,15 +1989,14 @@
             const clock = document.getElementById('clock-display'); 
             if(clock) {
                 clock.innerText = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Makassar' }).replace('.', ':'); 
-                if(state.currentView === 'profile') renderShiftInfo(); // Auto update shift & badge
+                if(state.currentView === 'profile') renderShiftInfo(); 
             }
         }, 1000); 
     };
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
     function checkConnectionAndSync() { 
-        const ob = document.getElementById('offline-banner');
-        if(ob) ob.style.display = navigator.onLine ? 'none' : 'block'; 
+        const ob = document.getElementById('offline-banner'); if(ob) ob.style.display = navigator.onLine ? 'none' : 'block'; 
     }
     window.addEventListener('online', checkConnectionAndSync);
     window.addEventListener('load', checkConnectionAndSync);
