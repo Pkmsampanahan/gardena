@@ -453,6 +453,53 @@
         .session-badge.closed { background: #64748b; border-color: #94a3b8; }
         .dot-blink { width: 5px; height: 5px; border-radius: 50%; background: white; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* NEW ADDITIONS FOR REFRESH */
+        .progress-ring {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 32px;
+            height: 32px;
+        }
+        .progress-ring circle {
+            fill: transparent;
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+        .ring-bg { stroke: #e2e8f0; stroke-dasharray: 4 2; }
+        .ring-fill { stroke: var(--primary); stroke-dasharray: 88; stroke-dashoffset: 88; transition: stroke-dashoffset 1s ease; }
+        .ring-active .ring-fill { stroke-dashoffset: 0; }
+        .ring-active .ring-bg { stroke: transparent; }
+
+        .quick-action-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 48%;
+        }
+
+        .gps-pill {
+            background: rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(52, 211, 153, 0.5);
+            padding: 4px 12px;
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
     </style>
 
     <meta name="theme-color" content="#10b981">
@@ -547,7 +594,7 @@
 
         <div id="view-profile" class="view-content">
             <div class="pink-header p-6 pb-8 text-white shadow-2xl">
-                <div class="flex justify-between items-start mb-6">
+                <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center gap-4 text-left">
                         <div class="relative">
                             <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-[20px] border-2 border-white/40 flex items-center justify-center text-3xl shadow-inner overflow-hidden">
@@ -596,18 +643,38 @@
                     <div class="w-full grid grid-cols-3 gap-2">
                         <div class="status-pill col-span-1">
                             <p class="text-[6px] font-black uppercase opacity-60 mb-1">Status Lokasi</p>
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5" id="gps-status-container">
                                 <span id="profile-gps-dot" class="w-2 h-2 bg-slate-300 rounded-full"></span>
                                 <p id="profile-gps-text" class="text-[8px] font-black uppercase truncate">Mendeteksi...</p>
                             </div>
                         </div>
                         <div class="status-pill col-span-1">
                             <p class="text-[6px] font-black uppercase opacity-60 mb-1">Jam Masuk</p>
-                            <p id="home-ket-masuk" class="text-[10px] font-black tracking-tighter">--:--</p>
+                            <div id="ring-masuk" class="progress-ring">
+                                <svg><circle class="ring-bg" cx="16" cy="16" r="14"/><circle class="ring-fill" cx="16" cy="16" r="14"/></svg>
+                                <p id="home-ket-masuk" class="absolute text-[8px] font-black tracking-tighter text-white">--:--</p>
+                            </div>
                         </div>
                         <div class="status-pill col-span-1">
                             <p class="text-[6px] font-black uppercase opacity-60 mb-1">Jam Pulang</p>
-                            <p id="home-ket-pulang" class="text-[10px] font-black tracking-tighter">--:--</p>
+                            <div id="ring-pulang" class="progress-ring">
+                                <svg><circle class="ring-bg" cx="16" cy="16" r="14"/><circle class="ring-fill" cx="16" cy="16" r="14"/></svg>
+                                <p id="home-ket-pulang" class="absolute text-[8px] font-black tracking-tighter text-white">--:--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full flex justify-between gap-2 mt-1">
+                        <div class="quick-action-card">
+                            <p class="text-[6px] font-black uppercase text-white/60 mb-1">Menuju Pulang</p>
+                            <p id="countdown-pulang" class="text-[11px] font-black text-white tracking-tighter">Sesi Belum Mulai</p>
+                        </div>
+                        <div class="quick-action-card">
+                            <p class="text-[6px] font-black uppercase text-white/60 mb-1">Presensi Bulan Ini</p>
+                            <div class="flex items-baseline gap-1">
+                                <p id="monthly-attendance-pct" class="text-[11px] font-black text-white">0%</p>
+                                <span class="text-[7px] font-bold text-white/50">Hadir</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -665,8 +732,8 @@
             <div class="p-8" style="padding-top: calc(2rem + var(--sat));">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Rekap Mandiri</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">Riwayat Absensi Saya</p>
+                        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Riwayat Absensi</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">Aktivitas Saya Bulan Ini</p>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="refreshData(this)" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shadow-sm border border-slate-200">🔄</button>
@@ -769,7 +836,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
                 </svg>
-                <p class="text-[7px] font-black uppercase">Rekap</p>
+                <p class="text-[7px] font-black uppercase">Riwayat</p>
             </button>
             <button onclick="openLogoutModal()" class="nav-item">
                 <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -815,8 +882,7 @@
                 <p id="modal-shift-day-text" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Jadwal...</p>
             </div>
             
-            <div id="modal-shift-details-container" class="space-y-4">
-                </div>
+            <div id="modal-shift-details-container" class="space-y-4"></div>
 
             <button onclick="closeShiftModal()" class="btn-primary text-xs uppercase w-full">Tutup Info</button>
         </div>
@@ -1041,15 +1107,19 @@
             state.currentLocation = pos;
             const profText = document.getElementById('profile-gps-text');
             const profDot = document.getElementById('profile-gps-dot');
-            if (profText) {
+            const gpsContainer = document.getElementById('gps-status-container');
+            
+            if (profText && gpsContainer) {
                 if (dist <= TARGET_LOC.radius) {
                     profText.innerText = "Area PKM";
                     profText.className = "text-[8px] font-black uppercase tracking-tighter text-white";
-                    profDot.className = "w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_5px_#34d399]";
+                    profDot.className = "w-2 h-2 bg-white rounded-full shadow-[0_0_5px_#fff] animate-pulse";
+                    gpsContainer.className = "flex items-center gap-1.5 gps-pill";
                 } else {
                     profText.innerText = "Luar Area";
                     profText.className = "text-[8px] font-black uppercase tracking-tighter text-red-200";
                     profDot.className = "w-2 h-2 bg-red-500 rounded-full";
+                    gpsContainer.className = "flex items-center gap-1.5";
                 }
             }
             if (document.getElementById('modal-scan').style.display === 'flex') updateGeoUI(pos);
@@ -1210,6 +1280,27 @@
         if (officer && officer.nip && nipEl) nipEl.innerText = `NRPK. ${officer.nip}`;
         const avatar = document.getElementById('prof-avatar');
         if(avatar) avatar.innerText = state.user.charAt(0).toUpperCase();
+        
+        calculateMonthlyAttendance();
+    }
+
+    function calculateMonthlyAttendance() {
+        if (!state.user || !state.data.logs) return;
+        const now = new Date();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const year = now.getFullYear().toString();
+        
+        const monthlyLogs = state.data.logs.filter(l => {
+            const p = l.date.split('/');
+            return l.name === state.user && p[1] === month && p[2] === year;
+        });
+        
+        const daysPresent = new Set(monthlyLogs.map(l => l.date)).size;
+        const workDays = 22; // Asumsi hari kerja
+        const pct = Math.min(Math.round((daysPresent / workDays) * 100), 100);
+        
+        const pctEl = document.getElementById('monthly-attendance-pct');
+        if(pctEl) pctEl.innerText = pct + "%";
     }
 
     async function fetchData() {
@@ -1245,6 +1336,7 @@
         const footerNote = document.getElementById('shift-footer-note');
         const badge = document.getElementById('session-indicator-badge');
         const badgeText = document.getElementById('session-badge-text');
+        const countdownEl = document.getElementById('countdown-pulang');
 
         const now = new Date();
         const day = now.getDay(); 
@@ -1268,6 +1360,7 @@
                 badge.classList.add('closed');
                 badgeText.innerText = "Sistem Libur";
             }
+            if(countdownEl) countdownEl.innerText = "Libur";
             return;
         }
 
@@ -1327,6 +1420,22 @@
                     badgeText.innerText = "Sesi Absensi Tutup";
                 }
             }
+
+            // Countdown Logic
+            if(countdownEl) {
+                if(currentTime < outS) {
+                    const diff = outS - currentTime;
+                    const h = Math.floor(diff / 60);
+                    const m = diff % 60;
+                    countdownEl.innerText = `${h}j ${m}m lagi`;
+                } else if (currentTime >= outS && currentTime <= outE) {
+                    countdownEl.innerText = "Sesi Pulang!";
+                    countdownEl.classList.add('text-emerald-400');
+                } else {
+                    countdownEl.innerText = "Selesai";
+                }
+            }
+
         } catch(e) { console.log("Shift parse error", e); }
     }
 
@@ -1923,6 +2032,9 @@
         const container = document.getElementById('daily-log-container');
         const homeKetMasuk = document.getElementById('home-ket-masuk');
         const homeKetPulang = document.getElementById('home-ket-pulang');
+        const ringMasuk = document.getElementById('ring-masuk');
+        const ringPulang = document.getElementById('ring-pulang');
+
         if(!container) return;
         if (state.isRefreshing) { container.innerHTML = `<div class="skeleton skeleton-log"></div><div class="skeleton skeleton-log"></div>`; return; }
         const now = new Date();
@@ -1938,15 +2050,30 @@
         const uniqueLogsMap = new Map();
         rawDisplayLogs.forEach(l => { uniqueLogsMap.set(l.type, l); });
         const displayLogs = Array.from(uniqueLogsMap.values());
+        
         if(homeKetMasuk) homeKetMasuk.innerText = "--:--";
         if(homeKetPulang) homeKetPulang.innerText = "--:--";
+        if(ringMasuk) ringMasuk.classList.remove('ring-active');
+        if(ringPulang) ringPulang.classList.remove('ring-active');
+
         if (displayLogs.length > 0) {
             container.innerHTML = displayLogs.map(l => {
                 const fixedTime = formatTimeFix(l.time);
                 if(isTodayActive) {
-                    if (l.type === 'MASUK') { if(homeKetMasuk) homeKetMasuk.innerText = fixedTime; }
-                    if (l.type === 'PULANG') { if(homeKetPulang) homeKetPulang.innerText = fixedTime; }
-                    if (l.type === 'DL') { if(homeKetMasuk) homeKetMasuk.innerText = "DL"; if(homeKetPulang) homeKetPulang.innerText = "DL"; }
+                    if (l.type === 'MASUK') { 
+                        if(homeKetMasuk) homeKetMasuk.innerText = fixedTime;
+                        if(ringMasuk) ringMasuk.classList.add('ring-active');
+                    }
+                    if (l.type === 'PULANG') { 
+                        if(homeKetPulang) homeKetPulang.innerText = fixedTime;
+                        if(ringPulang) ringPulang.classList.add('ring-active');
+                    }
+                    if (l.type === 'DL') { 
+                        if(homeKetMasuk) homeKetMasuk.innerText = "DL"; 
+                        if(homeKetPulang) homeKetPulang.innerText = "DL"; 
+                        if(ringMasuk) ringMasuk.classList.add('ring-active');
+                        if(ringPulang) ringPulang.classList.add('ring-active');
+                    }
                 }
                 let biometricIcon = '';
                 if(l.type === 'MASUK') {
