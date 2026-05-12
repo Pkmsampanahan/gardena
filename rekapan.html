@@ -85,7 +85,7 @@
             scrollbar-width: none;
         }
 
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table { width: 100%; border-collapse: collapse; min-width: 450px; }
         th { 
             background: #f8fafc; 
             padding: 14px 10px; 
@@ -101,6 +101,23 @@
             font-size: 10px; 
             font-weight: 700; 
             border-bottom: 1px solid #f1f5f9; 
+        }
+        .dark th { background: #1e293b; color: #64748b; }
+        .dark td { border-bottom-color: #1e293b; }
+
+        /* Card View Styles */
+        .grid-view {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 0 20px;
+        }
+        .data-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
         .status-tag {
@@ -379,6 +396,25 @@
         <div class="mb-3">
             <input type="text" id="search-name" oninput="renderTable()" placeholder="Cari Nama Petugas..." class="input-custom">
         </div>
+        
+        <!-- NEW FILTER: MODE & SORT -->
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="text-[8px] font-black text-slate-400 uppercase ml-2 mb-1 block">Mode Tampilan</label>
+                <select id="view-mode" onchange="renderTable()" class="input-custom">
+                    <option value="table">📋 Tabel</option>
+                    <option value="card">🗂️ Kartu</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-[8px] font-black text-slate-400 uppercase ml-2 mb-1 block">Urutan Data</label>
+                <select id="sort-order" onchange="renderTable()" class="input-custom">
+                    <option value="newest">📅 Terbaru</option>
+                    <option value="oldest">📅 Terlama</option>
+                </select>
+            </div>
+        </div>
+
         <div class="flex flex-wrap justify-between items-center gap-2 mt-4">
             <button onclick="document.getElementById('upload-excel-input').click()" class="btn-upload">
                 📥 UPLOAD EXCEL
@@ -396,20 +432,28 @@
         </div>
     </div>
 
-    <div class="rekap-table-container">
-        <div class="scroll-area">
-            <table id="main-table">
-                <thead>
-                    <tr>
-                        <th>Petugas</th>
-                        <th>Tanggal</th>
-                        <th>Jam Absen</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                </tbody>
-            </table>
+    <!-- Container for dynamic content -->
+    <div id="data-display-container">
+        <!-- Table view (default) -->
+        <div id="table-view-container" class="rekap-table-container">
+            <div class="scroll-area">
+                <table id="main-table">
+                    <thead>
+                        <tr>
+                            <th>Petugas</th>
+                            <th>Tanggal</th>
+                            <th>Jam Absen</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Grid view (hidden by default) -->
+        <div id="card-view-container" class="grid-view hidden">
         </div>
     </div>
 
@@ -442,9 +486,12 @@
 
     function renderTable() {
         const tbody = document.getElementById('table-body');
+        const cardContainer = document.getElementById('card-view-container');
         const month = document.getElementById('filter-month').value;
         const year = document.getElementById('filter-year').value;
         const query = document.getElementById('search-name').value.toLowerCase();
+        const viewMode = document.getElementById('view-mode').value;
+        const sortOrder = document.getElementById('sort-order').value;
 
         const filteredLogs = allData.filter(l => {
             const dateParts = l.date.split('/');
@@ -486,33 +533,63 @@
         currentFilteredItems = Object.values(groupedData).sort((a, b) => {
             const da = a.date.split('/');
             const db = b.date.split('/');
-            return new Date(db[2], db[1]-1, db[0]) - new Date(da[2], da[1]-1, da[0]);
+            const dateA = new Date(da[2], da[1]-1, da[0]);
+            const dateB = new Date(db[2], db[1]-1, db[0]);
+            return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
         });
 
         document.getElementById('summary-hadir').innerText = currentFilteredItems.filter(i => !i.isDL).length;
         document.getElementById('summary-late').innerText = currentFilteredItems.filter(i => i.isLate).length;
         document.getElementById('summary-dl').innerText = currentFilteredItems.filter(i => i.isDL).length;
         
+        // Handle Empty State
         if (currentFilteredItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" class="py-20 text-center opacity-30 font-black uppercase tracking-widest">Data Kosong</td></tr>`;
+            cardContainer.innerHTML = `<div class="py-20 text-center opacity-30 font-black uppercase tracking-widest col-span-full">Data Kosong</div>`;
             return;
         }
 
-        tbody.innerHTML = currentFilteredItems.map(i => `
-            <tr class="${i.isLate ? 'bg-pink-50/30' : ''}">
-                <td class="text-slate-800">${i.name}</td>
-                <td class="text-slate-400 font-medium">${i.date}</td>
-                <td class="text-slate-600 font-bold">${i.masuk} - ${i.pulang}</td>
-                <td>
-                    <span class="status-tag ${i.isDL ? 'bg-indigo-100 text-indigo-600' : i.isLate ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
-                        ${i.status || 'OK'}
-                    </span>
-                </td>
-            </tr>
-        `).join('');
+        // Render based on View Mode
+        if (viewMode === 'table') {
+            document.getElementById('table-view-container').classList.remove('hidden');
+            document.getElementById('card-view-container').classList.add('hidden');
+            
+            tbody.innerHTML = currentFilteredItems.map(i => `
+                <tr class="${i.isLate ? 'bg-pink-50/30' : ''}">
+                    <td class="text-slate-800 dark:text-slate-200">${i.name}</td>
+                    <td class="text-slate-400 font-medium">${i.date}</td>
+                    <td class="text-slate-600 dark:text-slate-400 font-bold">${i.masuk} - ${i.pulang}</td>
+                    <td>
+                        <span class="status-tag ${i.isDL ? 'bg-indigo-100 text-indigo-600' : i.isLate ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
+                            ${i.status || 'OK'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            document.getElementById('table-view-container').classList.add('hidden');
+            document.getElementById('card-view-container').classList.remove('hidden');
+
+            cardContainer.innerHTML = currentFilteredItems.map(i => `
+                <div class="data-card ${i.isLate ? 'border-rose-200 bg-rose-50/20' : ''}">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">${i.date}</p>
+                            <h4 class="text-sm font-black text-slate-800 dark:text-slate-200">${i.name}</h4>
+                        </div>
+                        <span class="status-tag ${i.isDL ? 'bg-indigo-100 text-indigo-600' : i.isLate ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
+                            ${i.status || 'OK'}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Jam Absen:</span>
+                        <span class="text-[11px] text-slate-800 dark:text-slate-100 font-black tracking-tight">${i.masuk} — ${i.pulang}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 
-    // FUNGSI UPLOAD EXCEL DAN SIMPAN KE GOOGLE SHEETS
     function handleUpload(input) {
         const file = input.files[0];
         if (!file) return;
@@ -564,13 +641,11 @@
             });
 
             if (newLogs.length > 0) {
-                // 1. Update data secara lokal untuk tampilan instan
                 allData = [...allData, ...newLogs];
                 document.getElementById('filter-month').value = lastFoundMonth;
                 document.getElementById('filter-year').value = lastFoundYear;
                 renderTable();
 
-                // 2. KIRIM DATA KE GOOGLE SHEETS (Action: uploadExcelData)
                 fetch(WEB_APP_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -580,12 +655,10 @@
                 })
                 .then(res => res.json())
                 .then(response => {
-                    console.log("Data berhasil disimpan ke Sheet:", response);
-                    alert(`Berhasil mengunggah ${newLogs.length / 2} baris data absensi dan mengirimnya ke database.`);
+                    alert(`Berhasil mengunggah ${newLogs.length / 2} baris data absensi.`);
                 })
                 .catch(err => {
-                    console.error("Gagal mengirim data:", err);
-                    alert("Data berhasil diproses secara lokal namun gagal dikirim ke database. Cek koneksi Anda.");
+                    alert("Gagal mengirim ke database, namun data berhasil diproses lokal.");
                 });
             } else {
                 alert("Format file tidak sesuai atau data tidak ditemukan.");
@@ -627,6 +700,7 @@
     function confirmPrint() {
         const checkedBoxes = document.querySelectorAll('.pegawai-checkbox:checked');
         const selectedNames = Array.from(checkedBoxes).map(cb => cb.value);
+        const sortOrder = document.getElementById('sort-order').value; // Get current UI sort order
 
         if (selectedNames.length === 0) {
             alert("Pilih minimal satu nama pegawai!");
@@ -640,7 +714,17 @@
         
         document.getElementById('print-month-title').innerText = `BULAN : ${monthNames[parseInt(month)-1]} ${year}`;
 
-        const printItems = currentFilteredItems.filter(item => selectedNames.includes(item.name));
+        // Print items follow the sorting logic from the UI (newest or oldest)
+        const printItems = currentFilteredItems
+            .filter(item => selectedNames.includes(item.name))
+            .sort((a, b) => {
+                const da = a.date.split('/');
+                const db = b.date.split('/');
+                const dateA = new Date(da[2], da[1]-1, da[0]);
+                const dateB = new Date(db[2], db[1]-1, db[0]);
+                // Applied dynamic sort based on current filter
+                return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+            });
 
         printTbody.innerHTML = printItems.map((i, index) => `
             <tr>
