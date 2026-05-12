@@ -30,7 +30,74 @@
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.3s, color 0.3s; }
         body { background-color: var(--bg); margin: 0; color: var(--text-main); overflow-x: hidden; }
 
-        .admin-container { width: 100%; max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg); padding-bottom: 40px; }
+        /* LOGIN PATTERN STYLES */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .pattern-dot {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            border: 2px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-mute);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            touch-action: manipulation;
+        }
+
+        .pattern-dot.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(0.9);
+        }
+
+        .pattern-dot.error {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* MAIN CONTENT STYLES */
+        /* Cari bagian .admin-container di kode Anda dan ubah max-width nya */
+.admin-container { 
+    width: 100%; 
+    max-width: 1000px; /* Diubah dari 500px agar lebih lebar di PC */
+    margin: 0 auto; 
+    min-height: 100vh; 
+    background: var(--bg); 
+    padding-bottom: 40px; 
+    display: none; 
+}
 
         .header-gradient {
             background: linear-gradient(135deg, #db2777 0%, #6366f1 100%);
@@ -72,6 +139,12 @@
         }
         .dark .input-custom { background: #1e293b; border-color: #334155; color: white; }
 
+        /* Style khusus untuk input date agar terlihat konsisten */
+        input[type="date"].input-custom {
+            text-transform: none;
+            font-family: inherit;
+        }
+
         .rekap-table-container {
             margin: 0 20px;
             background: var(--card-bg);
@@ -105,12 +178,13 @@
         .dark th { background: #1e293b; color: #64748b; }
         .dark td { border-bottom-color: #1e293b; }
 
-        /* Card View Styles */
-        .grid-view {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            padding: 0 20px;
+        /* Cari bagian .grid-view dan ubah seperti ini */
+.grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Otomatis nambah kolom kalau layar lebar */
+    gap: 12px;
+    padding: 0 20px;
+}
         }
         .data-card {
             background: var(--card-bg);
@@ -190,7 +264,6 @@
             z-index: 100;
         }
 
-        /* MODAL POPUP STYLES */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -258,7 +331,6 @@
             text-transform: uppercase;
         }
 
-        /* PRINT STYLES - AREA KHUSUS CETAK A4 */
         #print-area { display: none; }
 
         @media print {
@@ -284,6 +356,31 @@
     </style>
 </head>
 <body class="light">
+
+<!-- LOGIN PATTERN OVERLAY -->
+<div id="login-overlay">
+    <div class="text-center mb-4">
+        <div class="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🔐</span>
+        </div>
+        <h2 class="text-xl font-black text-slate-800">Akses Terbatas</h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Masukkan Pola Keamanan</p>
+    </div>
+    
+    <div class="pattern-grid" id="pattern-container">
+        <div class="pattern-dot" data-val="1">1</div>
+        <div class="pattern-dot" data-val="2">2</div>
+        <div class="pattern-dot" data-val="3">3</div>
+        <div class="pattern-dot" data-val="4">4</div>
+        <div class="pattern-dot" data-val="5">5</div>
+        <div class="pattern-dot" data-val="6">6</div>
+        <div class="pattern-dot" data-val="7">7</div>
+        <div class="pattern-dot" data-val="8">8</div>
+        <div class="pattern-dot" data-val="9">9</div>
+    </div>
+
+    <button onclick="resetPattern()" class="mt-8 text-[10px] font-black text-pink-500 uppercase tracking-tighter">Atur Ulang Pola</button>
+</div>
 
 <div id="modal-print" class="modal-overlay">
     <div class="modal-card">
@@ -347,7 +444,7 @@
     <p style="font-size: 9px; font-style: italic; margin-top: 20px;">*Hasil rekapitulasi data absensi elektronik tenaga non-ASN.</p>
 </div>
 
-<div class="admin-container">
+<div class="admin-container" id="main-content">
     <div class="header-gradient">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -374,7 +471,16 @@
     </div>
 
     <div class="filter-section">
-        <div class="grid grid-cols-2 gap-3 mb-3">
+        <!-- ADDED: CALENDAR FILTER -->
+        <div class="mb-3">
+            <label class="text-[8px] font-black text-slate-400 uppercase ml-2 mb-1 block">Filter Tanggal Spesifik (Opsional)</label>
+            <div class="flex gap-2">
+                <input type="date" id="filter-date" onchange="renderTable()" class="input-custom">
+                <button onclick="clearDateFilter()" class="px-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-bold text-slate-500">❌</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3" id="month-year-group">
             <div>
                 <label class="text-[8px] font-black text-slate-400 uppercase ml-2 mb-1 block">Bulan</label>
                 <select id="filter-month" onchange="renderTable()" class="input-custom">
@@ -393,11 +499,11 @@
                 </select>
             </div>
         </div>
+
         <div class="mb-3">
             <input type="text" id="search-name" oninput="renderTable()" placeholder="Cari Nama Petugas..." class="input-custom">
         </div>
         
-        <!-- NEW FILTER: MODE & SORT -->
         <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <label class="text-[8px] font-black text-slate-400 uppercase ml-2 mb-1 block">Mode Tampilan</label>
@@ -432,9 +538,7 @@
         </div>
     </div>
 
-    <!-- Container for dynamic content -->
     <div id="data-display-container">
-        <!-- Table view (default) -->
         <div id="table-view-container" class="rekap-table-container">
             <div class="scroll-area">
                 <table id="main-table">
@@ -452,7 +556,6 @@
             </div>
         </div>
 
-        <!-- Grid view (hidden by default) -->
         <div id="card-view-container" class="grid-view hidden">
         </div>
     </div>
@@ -463,6 +566,52 @@
 </div>
 
 <script>
+    // --- PATTERN LOGIN LOGIC ---
+    const CORRECT_PATTERN = "12369";
+    let currentPattern = "";
+    const dots = document.querySelectorAll('.pattern-dot');
+
+    dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            const val = dot.getAttribute('data-val');
+            if (currentPattern.includes(val)) return;
+
+            currentPattern += val;
+            dot.classList.add('active');
+
+            if (currentPattern === CORRECT_PATTERN) {
+                unlockApp();
+            } else if (currentPattern.length >= CORRECT_PATTERN.length) {
+                errorPattern();
+            }
+        });
+    });
+
+    function resetPattern() {
+        currentPattern = "";
+        dots.forEach(d => d.classList.remove('active', 'error'));
+    }
+
+    function errorPattern() {
+        dots.forEach(d => d.classList.add('error'));
+        setTimeout(resetPattern, 500);
+    }
+
+    function unlockApp() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        init(); // Start original app logic
+    }
+
+    // --- HELPER FUNCTION: CLEAR DATE FILTER ---
+    function clearDateFilter() {
+        document.getElementById('filter-date').value = "";
+        document.getElementById('month-year-group').style.opacity = "1";
+        document.getElementById('month-year-group').style.pointerEvents = "auto";
+        renderTable();
+    }
+
+    // --- ORIGINAL APP LOGIC ---
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDeWZyUvXj3qVOZXviPgN-d42jswXgkm2cvYlA7OBgGSPX-G_rxYti_rJWGVdpmi_f2A/exec";
     let allData = [];
     let currentFilteredItems = [];
@@ -492,10 +641,31 @@
         const query = document.getElementById('search-name').value.toLowerCase();
         const viewMode = document.getElementById('view-mode').value;
         const sortOrder = document.getElementById('sort-order').value;
+        
+        // NEW: Specific Date Filter Logic
+        const specificDate = document.getElementById('filter-date').value; 
+        const monthYearGroup = document.getElementById('month-year-group');
 
         const filteredLogs = allData.filter(l => {
-            const dateParts = l.date.split('/');
-            const matchesDate = dateParts[1] === month && dateParts[2] === year;
+            const dateParts = l.date.split('/'); // format d/m/y
+            const d = dateParts[0].padStart(2, '0');
+            const m = dateParts[1].padStart(2, '0');
+            const y = dateParts[2];
+            const formattedDateStr = `${y}-${m}-${d}`; // format yyyy-mm-dd
+
+            let matchesDate = false;
+            if (specificDate) {
+                // If calendar date is selected, ignore month/year dropdowns
+                matchesDate = formattedDateStr === specificDate;
+                monthYearGroup.style.opacity = "0.4";
+                monthYearGroup.style.pointerEvents = "none";
+            } else {
+                // Otherwise use month/year dropdowns
+                matchesDate = m === month && y === year;
+                monthYearGroup.style.opacity = "1";
+                monthYearGroup.style.pointerEvents = "auto";
+            }
+
             const matchesName = l.name.toLowerCase().includes(query);
             return matchesDate && matchesName;
         });
@@ -542,14 +712,12 @@
         document.getElementById('summary-late').innerText = currentFilteredItems.filter(i => i.isLate).length;
         document.getElementById('summary-dl').innerText = currentFilteredItems.filter(i => i.isDL).length;
         
-        // Handle Empty State
         if (currentFilteredItems.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" class="py-20 text-center opacity-30 font-black uppercase tracking-widest">Data Kosong</td></tr>`;
             cardContainer.innerHTML = `<div class="py-20 text-center opacity-30 font-black uppercase tracking-widest col-span-full">Data Kosong</div>`;
             return;
         }
 
-        // Render based on View Mode
         if (viewMode === 'table') {
             document.getElementById('table-view-container').classList.remove('hidden');
             document.getElementById('card-view-container').classList.add('hidden');
@@ -700,7 +868,7 @@
     function confirmPrint() {
         const checkedBoxes = document.querySelectorAll('.pegawai-checkbox:checked');
         const selectedNames = Array.from(checkedBoxes).map(cb => cb.value);
-        const sortOrder = document.getElementById('sort-order').value; // Get current UI sort order
+        const sortOrder = document.getElementById('sort-order').value;
 
         if (selectedNames.length === 0) {
             alert("Pilih minimal satu nama pegawai!");
@@ -714,7 +882,6 @@
         
         document.getElementById('print-month-title').innerText = `BULAN : ${monthNames[parseInt(month)-1]} ${year}`;
 
-        // Print items follow the sorting logic from the UI (newest or oldest)
         const printItems = currentFilteredItems
             .filter(item => selectedNames.includes(item.name))
             .sort((a, b) => {
@@ -722,7 +889,6 @@
                 const db = b.date.split('/');
                 const dateA = new Date(da[2], da[1]-1, da[0]);
                 const dateB = new Date(db[2], db[1]-1, db[0]);
-                // Applied dynamic sort based on current filter
                 return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
             });
 
@@ -763,8 +929,6 @@
         const wb = XLSX.utils.table_to_book(table, { sheet: "Rekap Absensi" });
         XLSX.writeFile(wb, `REKAP_GARDENA_${monthName}_${year}.xlsx`);
     }
-
-    window.onload = init;
 </script>
 
 </body>
