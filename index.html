@@ -1719,7 +1719,7 @@
         const inLateLimit = parse(data.inLate);
         const outStart = parse(data.outStart);
         const outEnd = parse(data.outEnd);
-        const isMasukTime = currentTime <= inStart && currentTime <= inLateLimit;
+        const isMasukTime = currentTime >= inStart && currentTime <= inLateLimit;
         const isPulangTime = currentTime >= outStart && currentTime <= outEnd;
         if (isMasukTime) return { allow: true, type: "MASUK" };
         if (isPulangTime) return { allow: true, type: "PULANG" };
