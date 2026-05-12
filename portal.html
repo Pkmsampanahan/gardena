@@ -65,9 +65,42 @@
             background: linear-gradient(135deg, rgba(5, 150, 105, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
             border: 1px solid rgba(5, 150, 105, 0.1);
         }
+
+        /* Modal Animation */
+        #app-modal { transition: all 0.3s ease-in-out; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+
+    <!-- MODAL POPUP (Hidden by default) -->
+    <div id="app-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none">
+        <div class="modal-content scale-90 bg-white dark:bg-slate-900 w-full max-w-md rounded-[32px] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-600 via-indigo-600 to-emerald-600"></div>
+            
+            <button onclick="closeAppModal()" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div id="modal-icon" class="w-20 h-20 mx-auto bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-4xl mb-6">
+                <!-- Icon will change via JS -->
+            </div>
+
+            <h3 id="modal-title" class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Akses Terbatas</h3>
+            <p id="modal-brand" class="text-pink-600 font-bold text-xs uppercase tracking-[0.2em] mb-4">GARDENA SYSTEM</p>
+            
+            <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-8">
+                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                    Aplikasi saat ini hanya dapat diakses melalui jaringan internal atau perangkat terdaftar. Silahkan <span class="font-bold text-slate-900 dark:text-white">hubungi Administrator IT</span> untuk aktivasi akun.
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <a href="https://wa.me/628XXXXXXXXXX" class="btn-gradient w-full py-4 rounded-2xl text-white font-bold text-sm uppercase tracking-widest">Hubungi Admin IT</a>
+                <button onclick="closeAppModal()" class="w-full py-4 text-slate-400 dark:text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-300">Tutup</button>
+            </div>
+        </div>
+    </div>
 
     <nav class="fixed w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -87,7 +120,7 @@
                     <svg id="sun-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path></svg>
                     <svg id="moon-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                 </button>
-                <a href="index.html" class="btn-gradient px-6 py-2.5 rounded-full text-white text-xs font-black uppercase tracking-widest">Buka Aplikasi</a>
+                <button onclick="showAppModal('gardena')" class="btn-gradient px-6 py-2.5 rounded-full text-white text-xs font-black uppercase tracking-widest">Buka Aplikasi</button>
             </div>
         </div>
     </nav>
@@ -121,7 +154,7 @@
                     Garda Terdepan Nakes Sampanahan. Sistem absensi berbasis Face Recognition yang cepat, akurat, dan terintegrasi lokasi.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <a href="index.html" class="btn-gradient px-8 py-4 rounded-2xl text-white font-bold text-sm uppercase tracking-widest text-center">Mulai Absensi Sekarang</a>
+                    <button onclick="showAppModal('gardena')" class="btn-gradient px-8 py-4 rounded-2xl text-white font-bold text-sm uppercase tracking-widest text-center">Mulai Absensi Sekarang</button>
                     <a href="#cara-kerja" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-8 py-4 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm uppercase tracking-widest hover:bg-slate-50 text-center">Pelajari Fitur</a>
                 </div>
             </div>
@@ -188,9 +221,9 @@
                         Sistem Absensi Bidan Sampanahan (SABINA) kini hadir terintegrasi. Dirancang khusus untuk memantau kehadiran shift bidan dengan fitur rekap otomatis.
                     </p>
                     <div class="flex flex-wrap gap-4">
-                        <a href="sabina.html" class="bg-slate-900 dark:bg-white dark:text-slate-950 text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2">
+                        <button onclick="showAppModal('sabina')" class="bg-slate-900 dark:bg-white dark:text-slate-950 text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2">
                             Akses SABINA <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </a>
+                        </button>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -223,9 +256,9 @@
                         Sistem Presensi Perawat (SAPENA) menggunakan teknologi QR Code terverifikasi lokasi (Geofencing) untuk memastikan akurasi kehadiran perawat di Puskesmas Sampanahan.
                     </p>
                     <div class="flex flex-wrap gap-4">
-                        <a href="index.html" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                        <button onclick="showAppModal('sapena')" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-emerald-600/20">
                             Akses SAPENA <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </a>
+                        </button>
                         <div class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500">
                             <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> GPS Verified
                         </div>
@@ -399,6 +432,54 @@
                 moon.classList.add('hidden');
                 sun.classList.remove('hidden');
                 localStorage.theme = 'dark';
+            }
+        }
+
+        // New Modal Functions
+        function showAppModal(appType) {
+            const modal = document.getElementById('app-modal');
+            const content = modal.querySelector('.modal-content');
+            const icon = document.getElementById('modal-icon');
+            const brand = document.getElementById('modal-brand');
+            const title = document.getElementById('modal-title');
+
+            // Reset and Set dynamic content
+            if(appType === 'sabina') {
+                icon.innerHTML = '👩‍⚕️';
+                brand.innerText = 'SABINA APP';
+                brand.className = 'text-pink-600 font-bold text-xs uppercase tracking-[0.2em] mb-4';
+                title.innerText = 'Akses Khusus Bidan';
+            } else if(appType === 'sapena') {
+                icon.innerHTML = '💉';
+                brand.innerText = 'SAPENA APP';
+                brand.className = 'text-emerald-600 font-bold text-xs uppercase tracking-[0.2em] mb-4';
+                title.innerText = 'Akses Khusus Perawat';
+            } else {
+                icon.innerHTML = '👤';
+                brand.innerText = 'GARDENA SYSTEM';
+                brand.className = 'text-indigo-600 font-bold text-xs uppercase tracking-[0.2em] mb-4';
+                title.innerText = 'Akses Terbatas';
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-90');
+            content.classList.add('scale-100');
+        }
+
+        function closeAppModal() {
+            const modal = document.getElementById('app-modal');
+            const content = modal.querySelector('.modal-content');
+            
+            content.classList.remove('scale-100');
+            content.classList.add('scale-90');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // Close modal when clicking outside the content
+        window.onclick = function(event) {
+            const modal = document.getElementById('app-modal');
+            if (event.target == modal) {
+                closeAppModal();
             }
         }
 
