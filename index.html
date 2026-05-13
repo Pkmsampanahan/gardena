@@ -1770,34 +1770,48 @@
     }
 
     async function detectFaceLoop() {
-        const video = document.getElementById('video-preview');
-        const btn = document.getElementById('btn-face-action');
-        const statusEl = document.getElementById('face-status-text');
-        const oval = document.getElementById('login-oval');
-        if (!state.stream || !video || video.paused || document.getElementById('modal-face').style.display === 'none') return;
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.5 }))
-                                    .withFaceLandmarks().withFaceDescriptor();
-        const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
-        video.style.transform = `scaleX(-1) scale(${alignment.scale})`;
-        if (alignment.aligned) {
-            state.currentDescriptor = detection.descriptor;
-            if(oval) oval.classList.add('valid');
-            if(statusEl) { statusEl.innerText = alignment.status; statusEl.className = "text-[8px] text-center mt-4 font-bold text-emerald-500 uppercase"; }
-            if(btn) { btn.disabled = false; btn.innerText = state.authMode === 'LOGIN' ? "KENALI SAYA & MASUK" : "KONFIRMASI ABSENSI"; }
-        } else {
-            if(oval) { oval.classList.remove('valid'); if (detection) oval.classList.add('invalid'); }
-            if(statusEl) { statusEl.innerText = alignment.status; statusEl.className = "text-[8px] text-center mt-4 font-bold text-red-400 uppercase"; }
-            if(btn) { btn.disabled = true; btn.innerText = "MENUNGGU WAJAH..."; }
-            state.faceDetectionFrame = requestAnimationFrame(detectFaceLoop);
+    const video = document.getElementById('video-preview');
+    const btn = document.getElementById('btn-face-action');
+    const statusEl = document.getElementById('face-status-text');
+    const oval = document.getElementById('login-oval');
+    
+    if (!state.stream || !video || video.paused || document.getElementById('modal-face').style.display === 'none') return;
+
+    // OPTIMASI: Menggunakan inputSize lebih kecil (128) agar proses deteksi jauh lebih ringan
+    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ 
+        inputSize: 128, 
+        scoreThreshold: 0.5 
+    })).withFaceLandmarks().withFaceDescriptor();
+
+    const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
+    
+    if (alignment.aligned) {
+        state.currentDescriptor = detection.descriptor;
+        if(oval) oval.classList.add('valid');
+        
+        // AUTO-CONFIRM KHUSUS ABSENSI (Agar instan seperti QR)
+        if (state.authMode === 'ABSENSI') {
+            confirmFaceAuth(); // Langsung eksekusi tanpa klik tombol jika wajah pas
+            return; 
         }
+
+        if(statusEl) statusEl.innerText = "WAJAH TERKUNCI ✅";
+        if(btn) { btn.disabled = false; btn.innerText = "KENALI SAYA & MASUK"; }
+    } else {
+        // ... (sisanya tetap sama)
+        state.faceDetectionFrame = requestAnimationFrame(detectFaceLoop);
     }
+}
 
     async function confirmFaceAuth() {
         triggerHaptic("confirm");
         const btn = document.getElementById('btn-face-action');
         if(btn) btn.disabled = true;
         let selectedUser = document.getElementById('select-user').value;
-        const threshold = parseFloat(state.data.config.THRESHOLD) || 0.1;
+        // Memisahkan akurasi: Login lebih ketat, Absen lebih longgar/cepat
+const threshold = state.authMode === 'ABSENSI' 
+    ? (parseFloat(state.data.config.THRESHOLD_ABSEN) || 0.1) 
+    : (parseFloat(state.data.config.THRESHOLD_LOGIN) || 0.1);
         try {
             let matchedUser = null;
             if (state.authMode === 'ABSENSI') {
