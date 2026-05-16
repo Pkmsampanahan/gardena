@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gardena-v1.2.4';
+const CACHE_NAME = 'gardena-v1.2.5';
 const ASSETS = ["./", "./manifest.json", "./icon-192.png", "./icon-512.png", "./index.html"];
 
 // Database Config
@@ -21,18 +21,26 @@ self.addEventListener('sync', e => {
     }
 });
 
+// Konfigurasi ulang fungsi pengiriman di Service Worker
 async function sendOfflineData() {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readonly');
     const store = tx.objectStore(STORE_NAME);
     const allData = await store.getAll();
 
+    // URL murni GAS tanpa query string data
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDeWZyUvXj3qVOZXviPgN-d42jswXgkm2cvYlA7OBgGSPX-G_rxYti_rJWGVdpmi_f2A/exec";
+
     for (const data of allData) {
         try {
-            // Kirim ke Google Sheets
-            const response = await fetch(data.url, { method: 'GET' }); 
+            // Kirim menggunakan POST menggunakan URLSearchParams / FormData agar kompatibel dengan doPost GAS
+            const response = await fetch(`${WEB_APP_URL}?action=${data.action}`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data.payload)
+            }); 
+            
             if (response.ok) {
-                // Jika sukses, hapus dari IndexedDB
                 const deleteTx = db.transaction(STORE_NAME, 'readwrite');
                 await deleteTx.objectStore(STORE_NAME).delete(data.id);
             }

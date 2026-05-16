@@ -53,6 +53,11 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden;
             padding-left: var(--sal);
             padding-right: var(--sar);
+            position: fixed; /* Kunci container utama agar tidak memantul di iOS */
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         body.platform-ios { -webkit-font-smoothing: antialiased; }
@@ -266,6 +271,7 @@
         @keyframes bounceFAB { 0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);} 40% {transform: translateX(-50%) translateY(-10px);} 60% {transform: translateX(-50%) translateY(-5px);} }
 
         .rekap-wrapper { width: 100%; overflow-x: auto; border-radius: 20px; }
+        .rekap-wrapper bg-white border border-slate-100 shadow-sm { width: 100%; overflow-x: auto; border-radius: 20px; }
         .rekap-table { width: 100%; border-collapse: collapse; font-size: 10px; min-width: 500px; }
         .rekap-table th { background: #f8fafc; padding: 12px 8px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #64748b; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
         .rekap-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); font-weight: 600; white-space: nowrap; }
@@ -536,16 +542,15 @@
             100% { transform: scale(1); opacity: 1; }
         }
         /* Pastikan video awalnya transparan */
-#video-preview, #video-register {
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-}
+        #video-preview, #video-register {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
 
-/* Class untuk menampilkan video */
-#video-preview.visible, #video-register.visible {
-    opacity: 1;
-}
-
+        /* Class untuk menampilkan video */
+        #video-preview.visible, #video-register.visible {
+            opacity: 1;
+        }
     </style>
 
     <meta name="theme-color" content="#10b981">
@@ -629,7 +634,7 @@
                 </div>
             </div>
             <div class="app-footer anim-card" style="border:none; background:transparent;">
-                <span class="version-tag">VER 1.2.3</span>
+                <span class="version-tag">VER 1.2.5</span>
                 <p class="brand-text">
                     Adi.P Founder & Head of Developer<br>
                     <span id="trigger-admin" class="text-pink-600 font-black cursor-pointer select-none" onclick="handleAdminTrigger()">BAROKAH DEV</span><br>
@@ -779,7 +784,7 @@
                 </div>
                 
                 <div class="app-footer" style="border:none; padding-bottom: 40px; background:transparent;">
-                    <span class="version-tag">VER 1.2.3</span>
+                    <span class="version-tag">VER 1.2.5</span>
                     <p class="brand-text">
                         Adi.P Founder & Head of Developer<br>
                         <span class="text-pink-600 font-black tracking-widest">BAROKAH DEV</span>
@@ -856,7 +861,7 @@
                 </div>
 
                 <div class="app-footer" style="border:none; padding-bottom: 40px; background: transparent;">
-                    <span class="version-tag">VER 1.2.3</span>
+                    <span class="version-tag">VER 1.2.5</span>
                     <p class="brand-text">Adi.P - Barokah Dev</p>
                 </div>
             </div>
@@ -1048,7 +1053,7 @@
 </div>
 
 <script>
-    const APP_VERSION = "1.2.4"; 
+    const APP_VERSION = "1.2.5"; 
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyDeWZyUvXj3qVOZXviPgN-d42jswXgkm2cvYlA7OBgGSPX-G_rxYti_rJWGVdpmi_f2A/exec";
     
     let TARGET_LOC = { lat: -2.637013, lng: 116.203609, radius: 100 };
@@ -1153,8 +1158,20 @@
     }
 
     function startGeoMonitoring() {
-        if (!navigator.geolocation) return;
+    if (!navigator.geolocation) return;
+    
+    // Ambil konfigurasi saklar AUTO_DETECT dari database
+    const cfg = state.data.config || {};
+    const autoDetectEnabled = cfg.AUTO_DETECT === true || cfg.AUTO_DETECT === "true";
+    
+    // Jika admin mematikan saklar Auto Deteksi, hentikan watchPosition untuk menghemat baterai nakes
+    if (!autoDetectEnabled && state.currentView !== 'profile') {
         if (state.geoWatchId) navigator.geolocation.clearWatch(state.geoWatchId);
+        return;
+    }
+
+    if (state.geoWatchId) navigator.geolocation.clearWatch(state.geoWatchId);
+
         
         const dotMain = document.getElementById('geo-dot-main');
         const textMain = document.getElementById('geo-text-main');
@@ -1205,7 +1222,11 @@
             if (dotMain) dotMain.className = "geo-dot-main inactive";
             const p = document.getElementById('profile-gps-text');
             if(p) p.innerText = "OFFLINE"; 
-        }, { enableHighAccuracy: true });
+        }, { 
+            enableHighAccuracy: true,
+            timeout: 10000,       // Maksimal tunggu respons GPS 10 detik
+            maximumAge: 30000     // Izinkan menggunakan data posisi cache maksimal berumur 30 detik (menghemat baterai)
+        });
     }
 
     function updateGeoUI(pos) {
@@ -1357,9 +1378,9 @@
 
     function calculateMonthlyAttendance() {
         if (!state.user || !state.data.logs) return;
-        const now = new Date();
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const year = now.getFullYear().toString();
+        const Bird = new Date();
+        const month = (Bird.getMonth() + 1).toString().padStart(2, '0');
+        const year = Bird.getFullYear().toString();
         const monthlyLogs = state.data.logs.filter(l => {
             const p = l.date.split('/');
             return l.name === state.user && p[1] === month && p[2] === year;
@@ -1680,35 +1701,33 @@
     }
 
     async function getCameraStream(targetId) {
-    try {
-        const videoEl = document.getElementById(targetId);
-        // Reset tampilan video (sembunyikan)
-        videoEl.classList.remove('visible'); 
-        
-        if (state.stream) { 
-            state.stream.getTracks().forEach(track => track.stop()); 
-        }
+        try {
+            const videoEl = document.getElementById(targetId);
+            videoEl.classList.remove('visible'); 
+            
+            if (state.stream) { 
+                state.stream.getTracks().forEach(track => track.stop()); 
+            }
 
-        const constraints = { 
-            video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
-        };
-        
-        state.stream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoEl.srcObject = state.stream;
-
-        return new Promise((resolve) => {
-            videoEl.onloadedmetadata = () => { 
-                videoEl.play(); 
-                // Kamera sudah siap, baru tampilkan dengan efek fade-in
-                videoEl.classList.add('visible'); 
-                resolve(true); 
+            const constraints = { 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
             };
-        });
-    } catch (err) {
-        showAlert("Gagal Kamera", "Izin kamera diperlukan.");
-        return false;
+            
+            state.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            videoEl.srcObject = state.stream;
+
+            return new Promise((resolve) => {
+                videoEl.onloadedmetadata = () => { 
+                    videoEl.play(); 
+                    videoEl.classList.add('visible'); 
+                    resolve(true); 
+                };
+            });
+        } catch (err) {
+            showAlert("Gagal Kamera", "Izin kamera diperlukan.");
+            return false;
+        }
     }
-}
 
     function isFaceAligned(detection, videoWidth, videoHeight) {
         if (!detection) return { aligned: false, status: "MENCARI WAJAH...", scale: 1.0 };
@@ -1728,7 +1747,6 @@
     }
 
     function checkShiftTime() {
-        // CEK STATUS LIBUR NASIONAL
         if (state.data.config.IS_HOLIDAY === true) {
             return { allow: false, msg: "Hari ini adalah Libur Nasional." };
         }
@@ -1801,50 +1819,47 @@
     }
 
     async function detectFaceLoop() {
-    const video = document.getElementById('video-preview');
-    const btn = document.getElementById('btn-face-action');
-    const statusEl = document.getElementById('face-status-text');
-    const oval = document.getElementById('login-oval');
-    
-    if (!state.stream || !video || video.paused || document.getElementById('modal-face').style.display === 'none') return;
-
-    // OPTIMASI: Menggunakan inputSize lebih kecil (128) agar proses deteksi jauh lebih ringan
-    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ 
-        inputSize: 128, 
-        scoreThreshold: 0.5 
-    })).withFaceLandmarks().withFaceDescriptor();
-
-    const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
-    
-    if (alignment.aligned) {
-        state.currentDescriptor = detection.descriptor;
-        if(oval) oval.classList.add('valid');
+        const video = document.getElementById('video-preview');
+        const btn = document.getElementById('btn-face-action');
+        const statusEl = document.getElementById('face-status-text');
+        const oval = document.getElementById('login-oval');
         
-        // AUTO-CONFIRM KHUSUS ABSENSI (Agar instan seperti QR)
-        if (state.authMode === 'ABSENSI') {
-            confirmFaceAuth(); // Langsung eksekusi tanpa klik tombol jika wajah pas
-            return; 
-        }
+        if (!state.stream || !video || video.paused || document.getElementById('modal-face').style.display === 'none') return;
 
-        if(statusEl) statusEl.innerText = "WAJAH TERKUNCI ✅";
-        if(btn) { btn.disabled = false; btn.innerText = "KENALI SAYA & MASUK"; }
-    } else {
-        if(oval) { oval.classList.remove('valid'); if (detection) oval.classList.add('invalid'); }
-        if(statusEl) statusEl.innerText = alignment.status;
-        if(btn) { btn.disabled = true; btn.innerText = "MENCARI WAJAH..."; }
-        state.faceDetectionFrame = requestAnimationFrame(detectFaceLoop);
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ 
+            inputSize: 128, 
+            scoreThreshold: 0.5 
+        })).withFaceLandmarks().withFaceDescriptor();
+
+        const alignment = isFaceAligned(detection, video.videoWidth, video.videoHeight);
+        
+        if (alignment.aligned) {
+            state.currentDescriptor = detection.descriptor;
+            if(oval) oval.classList.add('valid');
+            
+            if (state.authMode === 'ABSENSI') {
+                confirmFaceAuth(); 
+                return; 
+            }
+
+            if(statusEl) statusEl.innerText = "WAJAH TERKUNCI ✅";
+            if(btn) { btn.disabled = false; btn.innerText = "KENALI SAYA & MASUK"; }
+        } else {
+            if(oval) { oval.classList.remove('valid'); if (detection) oval.classList.add('invalid'); }
+            if(statusEl) statusEl.innerText = alignment.status;
+            if(btn) { btn.disabled = true; btn.innerText = "MENCARI WAJAH..."; }
+            state.faceDetectionFrame = requestAnimationFrame(detectFaceLoop);
+        }
     }
-}
 
     async function confirmFaceAuth() {
         triggerHaptic("confirm");
         const btn = document.getElementById('btn-face-action');
         if(btn) btn.disabled = true;
         let selectedUser = document.getElementById('select-user').value;
-        // Memisahkan akurasi: Login lebih ketat, Absen lebih longgar/cepat
-const threshold = state.authMode === 'ABSENSI' 
-    ? (parseFloat(state.data.config.THRESHOLD_ABSEN) || 0.1) 
-    : (parseFloat(state.data.config.THRESHOLD_LOGIN) || 0.1);
+        const threshold = state.authMode === 'ABSENSI' 
+            ? (parseFloat(state.data.config.THRESHOLD_ABSEN) || 0.1) 
+            : (parseFloat(state.data.config.THRESHOLD_LOGIN) || 0.1);
         try {
             let matchedUser = null;
             if (state.authMode === 'ABSENSI') {
@@ -1960,79 +1975,73 @@ const threshold = state.authMode === 'ABSENSI'
     }
 
     async function processAttendance(m, n = "-") {
-    if (state.isProcessing) return; 
-    state.isProcessing = true; 
+        if (state.isProcessing) return; 
+        state.isProcessing = true; 
 
-    const tc = checkShiftTime();
-    if (!tc.allow) { 
-        state.isProcessing = false; 
-        showAlert("Ditolak", tc.msg); 
-        return; 
-    }
-
-    const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
-    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Makassar' }).replace('.', ':');
-    let t = (m === "DL") ? "DL" : tc.type;
-
-    const payload = { 
-        name: state.user, type: t, note: n, 
-        accuracy: state.currentLocation ? Math.round(state.currentLocation.coords.accuracy) : 0,
-        coord: state.currentLocation ? `${state.currentLocation.coords.latitude},${state.currentLocation.coords.longitude}` : "No-GPS",
-        clientTime: timeStr 
-    };
-
-    // JIKA OFFLINE
-    if (!navigator.onLine) {
-        try {
-            const db = await openIndexedDB();
-            const tx = db.transaction('offline_attendance', 'readwrite');
-            const store = tx.objectStore('offline_attendance');
-            
-            // Simpan URL fetch-nya agar SW tinggal eksekusi
-            const url = `${WEB_APP_URL}?action=saveAttendance&data=${encodeURIComponent(JSON.stringify([payload]))}`;
-            await store.add({ url: url, timestamp: Date.now() });
-
-            // Daftarkan jadwal sinkron ke browser
-            if ('serviceWorker' in navigator && 'SyncManager' in window) {
-                const reg = await navigator.serviceWorker.ready;
-                await reg.sync.register('sync-absensi');
-            }
-
-            showAlert("Mode Offline", "Sinyal lemah. Absen disimpan & akan dikirim otomatis! 📶");
-            renderDailyLog(); 
-        } catch (e) {
-            showAlert("Error", "Gagal menyimpan data lokal.");
-        } finally {
-            state.isProcessing = false;
-            showLoading(false);
+        const tc = checkShiftTime();
+        if (!tc.allow) { 
+            state.isProcessing = false; 
+            showAlert("Ditolak", tc.msg); 
+            return; 
         }
-        return;
+
+        const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Makassar' }).replace(/\./g, '/');
+        const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Makassar' }).replace('.', ':');
+        let t = (m === "DL") ? "DL" : tc.type;
+
+        const payload = { 
+            name: state.user, type: t, note: n, 
+            accuracy: state.currentLocation ? Math.round(state.currentLocation.coords.accuracy) : 0,
+            coord: state.currentLocation ? `${state.currentLocation.coords.latitude},${state.currentLocation.coords.longitude}` : "No-GPS",
+            clientTime: timeStr 
+        };
+
+        if (!navigator.onLine) {
+            try {
+                const db = await openIndexedDB();
+                const tx = db.transaction('offline_attendance', 'readwrite');
+                const store = tx.objectStore('offline_attendance');
+                
+                await store.add({ 
+                    action: 'saveAttendance', 
+                    payload: [payload], 
+                    timestamp: Date.now() 
+                });
+
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    const reg = await navigator.serviceWorker.ready;
+                    await reg.sync.register('sync-absensi');
+                }
+
+                showAlert("Mode Offline", "Sinyal lemah. Absen disimpan & akan dikirim otomatis! 📶");
+                renderDailyLog(); 
+            } catch (e) {
+                showAlert("Error", "Gagal menyimpan data lokal.");
+            }
+            return;
+        }
+
+        showLoading(true, `Mencatat ${t}...`);
+        try { 
+            await callGAS('saveAttendance', [payload]); 
+            showAlert("Berhasil", `${t} Dicatat ✨`); 
+            await fetchData(); 
+        } catch (e) { 
+            showAlert("Error", "Gagal menyimpan."); 
+        } finally { 
+            state.isProcessing = false; 
+            showLoading(false); 
+        }
     }
 
-    // JIKA ONLINE (Gunakan kode lama Anda)
-    showLoading(true, `Mencatat ${t}...`);
-    try { 
-        await callGAS('saveAttendance', [payload]); 
-        showAlert("Berhasil", `${t} Dicatat ✨`); 
-        await fetchData(); 
-    } catch (e) { 
-        showAlert("Error", "Gagal menyimpan."); 
-    } finally { 
-        state.isProcessing = false; 
-        showLoading(false); 
+    function openIndexedDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('GARDENA_DB', 1);
+            request.onupgradeneeded = () => request.result.createObjectStore('offline_attendance', { keyPath: 'id', autoIncrement: true });
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
     }
-}
-
-// Fungsi bantu untuk buka DB di index.html
-function openIndexedDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open('GARDENA_DB', 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('offline_attendance', { keyPath: 'id', autoIncrement: true });
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-    });
-}
-
 
     function renderDailyLog() {
         const c = document.getElementById('daily-log-container'); const m = document.getElementById('home-ket-masuk'); const p = document.getElementById('home-ket-pulang');
@@ -2065,7 +2074,6 @@ function openIndexedDB() {
         detectPlatform(); 
         loadModels(); 
         
-        // Asynchronous Background Sync
         fetchData().then(() => {
             console.log("Background Sync Completed");
         }).catch(err => {
@@ -2091,7 +2099,6 @@ function openIndexedDB() {
 
     window.addEventListener('online', () => { const b = document.getElementById('offline-banner'); if(b) b.style.display = 'none'; });
     window.addEventListener('offline', () => { const b = document.getElementById('offline-banner'); if(b) b.style.display = 'block'; });
-    
 </script>
 </body>
 </html>
